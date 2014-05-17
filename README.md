@@ -24,8 +24,7 @@ Installation
 Configuration
 -------------
 
-The file `diggg.json` is the config file. It should be in the same folder like
-the executable file `diggg`.
+Customize and copy the `.diggg.dist` file in `~/` without the `.dist` extension.
 
 
 Usage
