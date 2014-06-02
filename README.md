@@ -26,6 +26,8 @@ Configuration
 
 Customize and copy the `.diggg.dist` file in `~/` without the `.dist` extension.
 
+Pick some DNS servers [her](http://www.chaz6.com/files/resolv.conf) :)
+
 
 Usage
 -----
