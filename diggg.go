@@ -1,16 +1,17 @@
 package main
 
 import (
+	dns "github.com/miekg/dns"
+
 	"encoding/json"
 	"fmt"
 	"log"
 	"math"
+	"net"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -24,7 +25,7 @@ type Servers struct {
 	Dns DnsType `json:"dns"`
 }
 
-const appVersion = "0.1.0"
+const appVersion = "0.2.0"
 const appName = "diggg"
 const listDnsFile = ".diggg"
 const outputNormalFormat = "| %-25s | %-15s | %-5s | %-5v | %-5v | %-15s |\n"
@@ -38,34 +39,35 @@ func timeTrack(start time.Time) {
 	log.Printf("%s took %s to execute.", appName, elapsed)
 }
 
-func diggg(domain string, dns string, ip string, wg *sync.WaitGroup) {
+func diggg(domain string, dnsName string, ip string, wg *sync.WaitGroup) {
 	wg.Add(1)
 
-	command := fmt.Sprintf("dig @%s +noall +answer %s", ip, domain)
+	c := new(dns.Client)
 
-	parts := strings.Fields(command)
-	head := parts[0]
-	parts = parts[1:len(parts)]
+	m := new(dns.Msg)
+	m.SetQuestion(dns.Fqdn(os.Args[1]), dns.TypeA)
 
-	output, err := exec.Command(head, parts...).Output()
+	r, _, err := c.Exchange(m, net.JoinHostPort(ip, "53"))
 
-	if err != nil {
-		fmt.Printf(outputErrorFormat, dns, ip, err)
+	if r == nil {
+		fmt.Printf(outputErrorFormat, dnsName, ip, err.Error())
 		wg.Done()
 		return
 	}
 
-	if len(output) == 0 {
-		fmt.Printf(outputErrorFormat, dns, ip, "timeout (consider to remove this ip)")
+	if r.Rcode != dns.RcodeSuccess {
+		fmt.Printf(outputErrorFormat, dnsName, ip, "Invalid answer name!")
 		wg.Done()
 		return
 	}
 
-	ttl := ttlRegexp.FindString(string(output))
-	ttl2, _ := strconv.ParseFloat(ttl, 64)
-	ipv4 := ipv4Regexp.FindString(string(output))
+	for _, a := range r.Answer {
+		ttl := ttlRegexp.FindString(a.String())
+		ttl2, _ := strconv.ParseFloat(ttl, 64)
+		ipv4 := ipv4Regexp.FindString(a.String())
 
-	fmt.Printf(outputNormalFormat, dns, ip, ttl, math.Floor(ttl2/60), math.Floor(ttl2/3600), ipv4)
+		fmt.Printf(outputNormalFormat, dnsName, ip, ttl, math.Floor(ttl2/60), math.Floor(ttl2/3600), ipv4)
+	}
 
 	wg.Done()
 }
@@ -78,7 +80,7 @@ func main() {
 		return
 	}
 
-    filePath := filepath.Join(os.Getenv("HOME"), listDnsFile)
+	filePath := filepath.Join(os.Getenv("HOME"), listDnsFile)
 	file, err := os.Open(filePath)
 
 	if err != nil {
