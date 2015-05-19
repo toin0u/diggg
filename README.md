@@ -29,7 +29,7 @@ Usage
     $ diggg google.dk
 
 
-Troubleshouting
+Troubleshooting
 ---------------
 
 - [ ] ensure to get an output for each `diggg` request (go is too fast :)
