@@ -18,7 +18,8 @@ Installation
 Configuration
 -------------
 
-Customize and copy the `.diggg.dist` file in `~/` without the `.dist` extension.
+Customize and copy the `.diggg.dist` file in `~/` without the `.dist` extension. You can
+also use this [gist](https://gist.github.com/toin0u/d5eaa809afea4fe19836).
 
 Pick some DNS servers [her](http://www.chaz6.com/files/resolv.conf) :)
 
